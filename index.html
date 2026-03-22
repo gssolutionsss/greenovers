@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Green. — Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ══════════════════════════════════════════════════
+   TOKENS
+══════════════════════════════════════════════════ */
+:root{
+  --ink:#131a14;--ink2:#1a231b;--ink3:#212e22;--ink4:#283029;
+  --cream:#edeae2;--cream2:#d8d4cb;
+  --green:#3ecf6a;--green2:#2ab356;--green3:rgba(62,207,106,.12);--green4:rgba(62,207,106,.22);
+  --text:#c8d4ca;--muted:rgba(200,212,202,.42);--muted2:rgba(200,212,202,.18);
+  --danger:#e05c6e;--warn:#d4a843;--blue:#4db8ff;
+  --serif:'Playfair Display',Georgia,serif;
+  --sans:'Outfit',sans-serif;
+  --r:10px;--ease:cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--ink);color:var(--text);font-family:var(--sans);font-size:14px;-webkit-font-smoothing:antialiased;overflow:hidden}
+::placeholder{color:var(--muted)}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--ink4);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:rgba(200,212,202,.25)}
+
+/* ══════════════════════════════════════════════════
+   LAYOUT SHELL
+══════════════════════════════════════════════════ */
+.shell{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:220px;flex-shrink:0;
+  background:var(--ink2);
+  border-right:1px solid var(--muted2);
+  display:flex;flex-direction:column;
+  padding:0;
+  z-index:10;
+  transition:width .3s var(--ease);
+}
+.sidebar-logo{
+  padding:24px 20px 20px;
+  border-bottom:1px solid var(--muted2);
+  display:flex;align-items:center;gap:10px;
+}
+.logo-text{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--cream);letter-spacing:-.3px}
+.logo-dot{display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;margin-left:1px;margin-bottom:2px;box-shadow:0 0 8px rgba(62,207,106,.7);animation:glow 2.5s ease-in-out infinite}
+@keyframes glow{0%,100%{box-shadow:0 0 6px rgba(62,207,106,.5)}50%{box-shadow:0 0 16px rgba(62,207,106,.9)}}
+.logo-badge{font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:2px}
+
+.nav{flex:1;padding:16px 10px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.nav-section{font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--muted);padding:10px 10px 6px;margin-top:6px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 10px;border-radius:8px;
+  font-size:13px;font-weight:500;color:var(--muted);
+  cursor:pointer;transition:all .18s var(--ease);
+  white-space:nowrap;overflow:hidden;
+  position:relative;
+}
+.nav-item:hover{background:var(--ink3);color:var(--text)}
+.nav-item.active{background:var(--green3);color:var(--green);border:1px solid var(--green4)}
+.nav-item svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.8;fill:none;flex-shrink:0}
+.nav-badge{
+  margin-left:auto;min-width:18px;height:18px;
+  background:var(--green);color:var(--ink);
+  border-radius:9px;font-size:9px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;padding:0 5px;
+}
+
+.sidebar-footer{
+  padding:16px;border-top:1px solid var(--muted2);
+  display:flex;flex-direction:column;gap:8px;
+}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ── TOPBAR ── */
+.topbar{
+  height:56px;flex-shrink:0;
+  background:var(--ink2);border-bottom:1px solid var(--muted2);
+  display:flex;align-items:center;padding:0 24px;gap:16px;
+}
+.topbar-title{font-family:var(--serif);font-size:17px;font-weight:600;color:var(--cream);flex:1}
+.topbar-clocks{display:flex;gap:20px;align-items:center}
+.clock-item{display:flex;flex-direction:column;align-items:center;gap:1px}
+.clock-city{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+.clock-time{font-size:13px;font-weight:600;color:var(--cream);font-family:monospace;letter-spacing:.5px}
+.clock-biz{font-size:9px;color:var(--muted);white-space:nowrap}
+.biz-open{color:var(--green) !important}
+.biz-closed{color:var(--danger) !important}
+.topbar-sep{width:1px;height:28px;background:var(--muted2)}
+
+/* ── PAGE ── */
+.page{display:none;flex:1;overflow-y:auto;padding:28px}
+.page.active{display:block;animation:fadeIn .25s var(--ease)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ══════════════════════════════════════════════════
+   COMMON COMPONENTS
+══════════════════════════════════════════════════ */
+.card{background:var(--ink2);border:1px solid var(--muted2);border-radius:14px;padding:24px;transition:border-color .2s}
+.card:hover{border-color:rgba(200,212,202,.3)}
+.card-sm{background:var(--ink2);border:1px solid var(--muted2);border-radius:12px;padding:18px}
+
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--cream2)}
+.sec-title svg{width:13px;height:13px;stroke:var(--green);stroke-width:2;fill:none}
+.sec-sub{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.gap{margin-bottom:20px}
+
+/* STAT CARD */
+.scard{
+  background:var(--ink2);border:1px solid var(--muted2);border-radius:12px;
+  padding:20px;position:relative;overflow:hidden;transition:all .2s var(--ease);
+}
+.scard:hover{transform:translateY(-2px);border-color:rgba(200,212,202,.3)}
+.scard::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;border-radius:0 0 12px 12px}
+.scard-g::after{background:var(--green)}.scard-r::after{background:var(--danger)}.scard-y::after{background:var(--warn)}.scard-b::after{background:var(--blue)}
+.scard-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.scard-icon svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none}
+.scard-g .scard-icon{background:var(--green3);color:var(--green)}
+.scard-r .scard-icon{background:rgba(224,92,110,.12);color:var(--danger)}
+.scard-y .scard-icon{background:rgba(212,168,67,.12);color:var(--warn)}
+.scard-b .scard-icon{background:rgba(77,184,255,.12);color:var(--blue)}
+.scard-n{font-family:var(--serif);font-size:32px;font-weight:700;line-height:1;margin-bottom:4px}
+.scard-g .scard-n{color:var(--green)}.scard-r .scard-n{color:var(--danger)}.scard-y .scard-n{color:var(--warn)}.scard-b .scard-n{color:var(--blue)}
+.scard-lbl{font-size:11px;font-weight:500;letter-spacing:1px;color:var(--muted)}
+.scard-delta{font-size:10px;font-weight:500;color:var(--green);margin-top:6px}
+
+/* BTN */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:6px;font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;border:none;transition:all .18s var(--ease)}
+.btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;flex-shrink:0}
+.btn-primary{background:var(--green);color:var(--ink);box-shadow:0 2px 12px rgba(62,207,106,.25)}
+.btn-primary:hover{background:var(--green2);transform:translateY(-1px);box-shadow:0 4px 20px rgba(62,207,106,.4)}
+.btn-outline{background:transparent;color:var(--text);border:1px solid var(--muted2)}
+.btn-outline:hover{border-color:rgba(200,212,202,.4);color:var(--cream)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid transparent;padding:9px 14px}
+.btn-ghost:hover{color:var(--danger);border-color:rgba(224,92,110,.25)}
+.btn-sm{padding:7px 14px;font-size:10px}
+
+/* INPUT */
+.inp{width:100%;background:var(--ink);border:1px solid var(--muted2);border-radius:6px;color:var(--text);font-family:var(--sans);font-size:12px;padding:9px 12px;outline:none;transition:all .18s var(--ease)}
+.inp:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(62,207,106,.1)}
+select.inp{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(200,212,202,0.3)' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;cursor:pointer}
+select.inp option{background:var(--ink2)}
+.lbl{font-size:10px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
+
+/* TABLE */
+.tbl-wrap{border:1px solid var(--muted2);border-radius:12px;overflow:hidden;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{background:var(--ink3);border-bottom:1px solid var(--muted2)}
+th{padding:11px 16px;text-align:left;font-size:9px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;cursor:pointer;transition:color .15s}
+th:hover{color:var(--cream)}
+th.s{color:var(--green)}
+tbody tr{border-bottom:1px solid rgba(200,212,202,.04);transition:background .12s;cursor:pointer}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+td{padding:11px 16px;color:rgba(200,212,202,.7);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.name-c{color:var(--cream);font-weight:500;font-size:13px}
+td a{color:var(--text);text-decoration:none}td a:hover{color:var(--green)}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:600;letter-spacing:1px}
+.pill-g{background:rgba(62,207,106,.1);color:var(--green);border:1px solid rgba(62,207,106,.25)}
+.pill-r{background:rgba(224,92,110,.1);color:var(--danger);border:1px solid rgba(224,92,110,.2)}
+.pill-y{background:rgba(212,168,67,.1);color:var(--warn);border:1px solid rgba(212,168,67,.2)}
+.pill-b{background:rgba(77,184,255,.1);color:var(--blue);border:1px solid rgba(77,184,255,.2)}
+
+/* PROGRESS BAR */
+.pbar{height:4px;background:var(--ink4);border-radius:2px;overflow:hidden;margin-top:8px}
+.pbar-fill{height:100%;border-radius:2px;transition:width .6s var(--ease)}
+.pbar-g .pbar-fill{background:var(--green)}.pbar-y .pbar-fill{background:var(--warn)}.pbar-r .pbar-fill{background:var(--danger)}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--ink2);border:1px solid var(--muted2);border-left:2px solid var(--green);border-radius:var(--r);padding:12px 18px;font-size:12px;font-weight:500;color:var(--cream);z-index:9999;transform:translateY(12px);opacity:0;transition:all .3s var(--ease);max-width:300px;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.toast.up{transform:translateY(0);opacity:1}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px)}
+.modal-bg.open{display:flex;animation:fadeIn .2s}
+.modal{background:var(--ink2);border:1px solid var(--muted2);border-radius:16px;width:100%;max-width:680px;max-height:85vh;overflow-y:auto;animation:slideUp .25s var(--ease)}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.modal-head{padding:24px 24px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.modal-body{padding:24px}
+.modal-close{width:32px;height:32px;border-radius:6px;background:var(--ink3);border:1px solid var(--muted2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s}
+.modal-close:hover{border-color:var(--danger);color:var(--danger)}
+.modal-close svg{width:14px;height:14px;stroke:currentColor;stroke-width:2;fill:none}
+
+/* DIVIDER */
+.hr{height:1px;background:var(--muted2);margin:20px 0}
+
+/* BADGE ROW */
+.badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+/* TEXTAREA */
+textarea.inp{resize:vertical;min-height:80px;line-height:1.5}
+
+/* ══════════════════════════════════════════════════
+   PAGE: DASHBOARD
+══════════════════════════════════════════════════ */
+.activity-feed{display:flex;flex-direction:column;gap:1px}
+.activity-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-radius:8px;
+  transition:background .12s;cursor:default;
+  border-bottom:1px solid rgba(200,212,202,.04);
+}
+.activity-item:hover{background:var(--ink3)}
+.activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.activity-dot-g{background:var(--green)}.activity-dot-r{background:var(--danger)}.activity-dot-y{background:var(--warn)}
+.activity-text{flex:1;font-size:12px;color:var(--text)}
+.activity-time{font-size:10px;color:var(--muted);white-space:nowrap;font-family:monospace}
+
+.mini-chart{height:48px;display:flex;align-items:flex-end;gap:3px;padding:0 2px}
+.bar-col{flex:1;border-radius:3px 3px 0 0;transition:all .4s var(--ease);cursor:pointer;min-height:4px}
+.bar-col:hover{opacity:.8;transform:scaleY(1.05);transform-origin:bottom}
+.bar-g{background:var(--green)}.bar-y{background:var(--warn)}.bar-r{background:var(--danger)}
+.bar-dim{background:rgba(62,207,106,.2)}
+
+/* TARGET TIMEZONE INDICATOR */
+.tz-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.tz-card{
+  flex:1;min-width:130px;
+  background:var(--ink3);border:1px solid var(--muted2);border-radius:10px;
+  padding:12px 14px;display:flex;flex-direction:column;gap:3px;
+  transition:border-color .2s;
+}
+.tz-card.open-zone{border-color:rgba(62,207,106,.4);background:rgba(62,207,106,.05)}
+.tz-card.closed-zone{border-color:rgba(224,92,110,.2)}
+.tz-name{font-size:9px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted)}
+.tz-time{font-size:20px;font-weight:700;font-family:monospace;color:var(--cream);line-height:1}
+.tz-status{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.tz-open{color:var(--green)}.tz-closed{color:var(--danger)}
+
+/* ══════════════════════════════════════════════════
+   PAGE: LEADS
+══════════════════════════════════════════════════ */
+.lead-card{
+  background:var(--ink2);border:1px solid var(--muted2);border-radius:14px;
+  padding:20px;cursor:pointer;transition:all .2s var(--ease);
+  position:relative;overflow:hidden;
+}
+.lead-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--muted2);border-radius:14px 0 0 14px;transition:background .2s}
+.lead-card:hover{transform:translateY(-2px);border-color:rgba(200,212,202,.3);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.lead-card.called::before{background:var(--green)}
+.lead-card.skipped::before{background:var(--warn)}
+.lead-card.interested::before{background:var(--blue)}
+.lead-card.not-interested::before{background:var(--danger)}
+.lead-name{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--cream);margin-bottom:6px}
+.lead-meta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.lead-meta-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.lead-meta-item svg{width:11px;height:11px;stroke:currentColor;stroke-width:2;fill:none}
+.lead-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.lead-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+
+.competition-bar{display:flex;align-items:center;gap:8px;margin-top:8px}
+.comp-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;width:80px;flex-shrink:0}
+.comp-track{flex:1;height:3px;background:rgba(200,212,202,.1);border-radius:2px}
+.comp-fill{height:100%;border-radius:2px;transition:width .6s var(--ease)}
+.comp-low .comp-fill{background:var(--green);width:25%}
+.comp-med .comp-fill{background:var(--warn);width:55%}
+.comp-high .comp-fill{background:var(--danger);width:85%}
+.comp-val{font-size:10px;font-weight:600;width:32px;text-align:right}
+.comp-low .comp-val{color:var(--green)}.comp-med .comp-val{color:var(--warn)}.comp-high .comp-val{color:var(--danger)}
+
+/* LEAD FILTERS BAR */
+.leads-topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+.search-wrap{flex:1;min-width:180px;position:relative}
+.search-wrap .inp{padding-left:36px}
+.search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--muted);stroke-width:2;fill:none;pointer-events:none}
+
+/* UPLOAD ZONE */
+.upload-area{border:1px dashed rgba(200,212,202,.18);border-radius:12px;padding:40px 24px;text-align:center;cursor:pointer;transition:all .25s var(--ease)}
+.upload-area:hover{border-color:rgba(62,207,106,.4);background:var(--green3)}
+.upload-area.drag{border-color:var(--green);background:rgba(62,207,106,.08)}
+.upload-ico{width:44px;height:44px;background:var(--ink3);border:1px solid var(--muted2);border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;transition:all .2s}
+.upload-area:hover .upload-ico{background:var(--green3);border-color:var(--green4)}
+.upload-ico svg{width:20px;height:20px;stroke:var(--muted);stroke-width:1.5;fill:none;transition:stroke .2s}
+.upload-area:hover .upload-ico svg{stroke:var(--green)}
+.upload-title{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--cream);margin-bottom:6px}
+.upload-sub{font-size:12px;color:var(--muted);margin-bottom:16px}
+
+/* ══════════════════════════════════════════════════
+   PAGE: CALL TRACKER
+══════════════════════════════════════════════════ */
+.call-stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
+.call-row{
+  display:flex;align-items:center;gap:14px;
+  padding:12px 16px;border-radius:10px;
+  background:var(--ink3);border:1px solid var(--muted2);
+  transition:all .18s;cursor:pointer;margin-bottom:8px;
+}
+.call-row:hover{border-color:rgba(200,212,202,.3);background:var(--ink4)}
+.call-num{font-family:monospace;font-size:13px;font-weight:600;color:var(--cream);letter-spacing:.5px}
+.call-name{font-size:12px;color:var(--text);flex:1}
+.call-time-tag{font-size:10px;color:var(--muted);font-family:monospace}
+.call-status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ══════════════════════════════════════════════════
+   PAGE: FILTER TOOL (integrated)
+══════════════════════════════════════════════════ */
+.filter-tool-wrap{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
+.filter-panel{display:flex;flex-direction:column;gap:14px}
+.range-row{display:flex;flex-direction:column;gap:7px}
+.range-head{display:flex;justify-content:space-between;align-items:center}
+.range-val{font-size:13px;font-weight:600;color:var(--cream);font-family:var(--serif)}
+input[type="range"]{width:100%;height:2px;-webkit-appearance:none;background:rgba(200,212,202,.1);border-radius:1px;outline:none;cursor:pointer;border:none;padding:0}
+input[type="range"]::-webkit-slider-runnable-track{background:linear-gradient(to right,var(--green) 0%,var(--green) var(--v,0%),rgba(200,212,202,.12) var(--v,0%));height:2px;border-radius:1px}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--cream);border:2px solid var(--green);cursor:pointer;transition:transform .15s;margin-top:-6px}
+input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.25)}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:5px 12px;border:1px solid var(--muted2);border-radius:20px;font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all .15s;user-select:none}
+.chip:hover{border-color:rgba(62,207,106,.4);color:var(--text)}
+.chip.on{border-color:var(--green);color:var(--green);background:var(--green3)}
+
+/* ══════════════════════════════════════════════════
+   PAGE: SCRIPTS & NOTES
+══════════════════════════════════════════════════ */
+.script-card{background:var(--ink2);border:1px solid var(--muted2);border-radius:12px;padding:20px;cursor:pointer;transition:all .2s}
+.script-card:hover{border-color:rgba(200,212,202,.3);transform:translateY(-1px)}
+.script-type{font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.script-title{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--cream);margin-bottom:6px}
+.script-prev{font-size:12px;color:var(--muted);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ══════════════════════════════════════════════════
+   GAIA BAR
+══════════════════════════════════════════════════ */
+.gaia-strip{
+  display:flex;align-items:center;gap:10px;
+  background:var(--ink3);border:1px solid var(--muted2);border-left:2px solid var(--green);
+  border-radius:var(--r);padding:12px 16px;margin-bottom:20px;
+}
+.gaia-ico{width:28px;height:28px;background:var(--green3);border:1px solid var(--green4);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.gaia-ico svg{width:12px;height:12px;stroke:var(--green);stroke-width:2;fill:none}
+.gaia-label{font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--green);margin-right:8px;white-space:nowrap}
+#gaiaMsg{font-size:12px;color:var(--text);font-weight:300}
+.caret{display:inline-block;width:1.5px;height:12px;background:var(--green);margin-left:2px;vertical-align:middle;animation:caretBlink .85s ease-in-out infinite}
+@keyframes caretBlink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* MINI SPARKLINE */
+.spark{display:inline-flex;align-items:flex-end;gap:2px;height:20px}
+.spark-b{width:4px;border-radius:1px 1px 0 0;background:var(--green);opacity:.5}
+.spark-b:last-child{opacity:1}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+<!-- ══════════════════════════════ SIDEBAR ══════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div>
+      <div class="logo-text">Green<span class="logo-dot"></span></div>
+      <div class="logo-badge">Command Center</div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-section">Overview</div>
+    <div class="nav-item active" data-page="dashboard">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </div>
+
+    <div class="nav-section">Lead Operations</div>
+    <div class="nav-item" data-page="leads">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      Lead Intelligence
+      <span class="nav-badge" id="nb-leads">0</span>
+    </div>
+    <div class="nav-item" data-page="filter">
+      <svg viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Lead Filter
+    </div>
+    <div class="nav-item" data-page="calls">
+      <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.96 9.7 19.79 19.79 0 01.9 1.1 2 2 0 012.88.01h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L7.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0121.98 14z"/></svg>
+      Call Tracker
+    </div>
+
+    <div class="nav-section">Tools</div>
+    <div class="nav-item" data-page="scripts">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Scripts & Notes
+    </div>
+    <div class="nav-item" data-page="analytics">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Analytics
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">G.A.I.A. v2.4</div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:glow 2s ease-in-out infinite"></div>
+      <span style="font-size:10px;color:var(--green);letter-spacing:1px">All Systems Online</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════ MAIN ══════════════════════════════ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-clocks" id="clocksRow"></div>
+    <div class="topbar-sep"></div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Calling Now</div>
+      <div class="clock-biz" id="currentBizStatus">— No active target</div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: DASHBOARD ══ -->
+  <div class="page active" id="page-dashboard">
+    <div style="max-width:1100px">
+
+      <div class="gaia-strip">
+        <div class="gaia-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
+        <span class="gaia-label">G.A.I.A.</span>
+        <span id="gaiaMsg">Good morning, boss. Here's your full operation overview. All systems are running clean.</span><span class="caret"></span>
+      </div>
+
+      <!-- TZ CLOCKS -->
+      <div class="tz-row" id="tzRow"></div>
+
+      <!-- KPI ROW -->
+      <div class="grid4 gap" id="kpiRow">
+        <div class="scard scard-g">
+          <div class="scard-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <div class="scard-n" id="kpi-total">0</div>
+          <div class="scard-lbl">Total Leads</div>
+          <div class="scard-delta" id="kpi-total-d">Upload CSV to begin</div>
+        </div>
+        <div class="scard scard-b">
+          <div class="scard-icon"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.96 9.7"/><path d="M1 1l22 22"/></svg></div>
+          <div class="scard-n" id="kpi-called">0</div>
+          <div class="scard-lbl">Businesses Called</div>
+          <div class="pbar pbar-b" style="margin-top:8px"><div class="pbar-fill" style="background:var(--blue);width:0%" id="kpi-called-bar"></div></div>
+        </div>
+        <div class="scard scard-y">
+          <div class="scard-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div class="scard-n" id="kpi-interested">0</div>
+          <div class="scard-lbl">Interested</div>
+          <div class="pbar pbar-y" style="margin-top:8px"><div class="pbar-fill" id="kpi-int-bar"></div></div>
+        </div>
+        <div class="scard scard-r">
+          <div class="scard-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
+          <div class="scard-n" id="kpi-conv">0%</div>
+          <div class="scard-lbl">Conversion Rate</div>
+          <div class="scard-delta" id="kpi-conv-d" style="color:var(--muted)">Calls / Interested</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <!-- RECENT ACTIVITY -->
+        <div class="card">
+          <div class="sec-head">
+            <div class="sec-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Recent Activity</div>
+          </div>
+          <div class="activity-feed" id="activityFeed">
+            <div style="text-align:center;padding:24px;color:var(--muted);font-size:12px">No activity yet. Start calling leads.</div>
+          </div>
+        </div>
+
+        <!-- CALL BREAKDOWN -->
+        <div class="card">
+          <div class="sec-head">
+            <div class="sec-title"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Call Results</div>
+          </div>
+          <div id="callBreakdown">
+            <div style="color:var(--muted);font-size:12px;text-align:center;padding:24px">No calls logged yet.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NICHE BREAKDOWN -->
+      <div class="card" style="margin-top:16px">
+        <div class="sec-head">
+          <div class="sec-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>Lead Breakdown by Niche</div>
+          <div class="sec-sub" id="nicheCount">—</div>
+        </div>
+        <div id="nicheBreakdown" style="color:var(--muted);font-size:12px;text-align:center;padding:24px">Upload leads to see niche breakdown.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ PAGE: LEAD INTELLIGENCE ══ -->
+  <div class="page" id="page-leads">
+    <div style="max-width:1200px">
+
+      <div class="gaia-strip" style="margin-bottom:16px">
+        <div class="gaia-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
+        <span class="gaia-label">G.A.I.A.</span>
+        <span style="font-size:12px;color:var(--text);font-weight:300">Each card shows phone, website, rating, competition level, and key facts. Click a card to expand full profile and log a call, boss.</span>
+      </div>
+
+      <!-- UPLOAD OR LEADS -->
+      <div id="leadsUploadZone">
+        <div class="card" style="margin-bottom:16px">
+          <div class="sec-head">
+            <div class="sec-title"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Load Lead Data</div>
+          </div>
+          <div class="upload-area" id="leadsDropZone">
+            <div class="upload-ico"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div>
+            <div class="upload-title">Drop your filtered CSV here</div>
+            <div class="upload-sub">Use the Lead Filter tool first, then load here for full intelligence profiles</div>
+            <label class="btn btn-outline btn-sm" for="leadsFile" style="cursor:pointer">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Select CSV
+            </label>
+            <input type="file" id="leadsFile" accept=".csv" style="display:none"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEADS GRID -->
+      <div id="leadsSection" style="display:none">
+        <div class="leads-topbar">
+          <div class="search-wrap">
+            <svg class="search-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" class="inp" id="leadSearch" placeholder="Search by name, niche, city..."/>
+          </div>
+          <select class="inp" id="leadStatusFilter" style="width:150px">
+            <option value="">All Status</option>
+            <option value="uncalled">Not Called</option>
+            <option value="called">Called</option>
+            <option value="interested">Interested</option>
+            <option value="not-interested">Not Interested</option>
+            <option value="skipped">Skipped</option>
+          </select>
+          <select class="inp" id="leadNicheFilter" style="width:150px">
+            <option value="">All Niches</option>
+          </select>
+          <button class="btn btn-outline btn-sm" id="clearLeadsBtn">
+            <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+            Clear
+          </button>
+        </div>
+        <div class="lead-grid" id="leadsGrid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: FILTER TOOL ══ -->
+  <div class="page" id="page-filter">
+    <div style="max-width:1100px">
+      <div class="gaia-strip">
+        <div class="gaia-ico"><svg viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></div>
+        <span class="gaia-label">G.A.I.A.</span>
+        <span id="filterGaiaMsg" style="font-size:12px;color:var(--text);font-weight:300">Upload your raw scraper export. I'll strip the noise and give you only what matters, boss.</span><span class="caret"></span>
+      </div>
+
+      <div class="filter-tool-wrap">
+        <!-- LEFT PANEL -->
+        <div class="filter-panel">
+          <div class="card">
+            <div class="sec-head" style="margin-bottom:16px">
+              <div class="sec-title"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Upload CSV</div>
+            </div>
+            <div class="upload-area" id="filterDrop" style="padding:28px 16px">
+              <div class="upload-ico" style="width:36px;height:36px;margin:0 auto 10px"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+              <div style="font-size:13px;color:var(--cream);margin-bottom:6px">Drop CSV here</div>
+              <label class="btn btn-outline btn-sm" for="filterFile" style="cursor:pointer;display:inline-flex">Browse</label>
+              <input type="file" id="filterFile" accept=".csv" style="display:none"/>
+            </div>
+            <div style="margin-top:10px;font-size:10px;color:var(--muted);text-align:center" id="filterFileTag"></div>
+          </div>
+
+          <div class="card">
+            <div class="sec-head" style="margin-bottom:16px">
+              <div class="sec-title"><svg viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Filters</div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div class="range-row">
+                <div class="range-head"><span class="lbl" style="margin:0">Max Reviews</span><span class="range-val" id="fvMaxRev">50</span></div>
+                <input type="range" id="fMaxRev" min="0" max="1000" value="50" step="5"/>
+              </div>
+              <div class="range-row">
+                <div class="range-head"><span class="lbl" style="margin:0">Min Reviews</span><span class="range-val" id="fvMinRev">0</span></div>
+                <input type="range" id="fMinRev" min="0" max="500" value="0" step="5"/>
+              </div>
+              <div class="range-row">
+                <div class="range-head"><span class="lbl" style="margin:0">Max Rating</span><span class="range-val" id="fvMaxRat">4.6</span></div>
+                <input type="range" id="fMaxRat" min="1" max="5" value="4.6" step="0.1"/>
+              </div>
+              <div class="range-row">
+                <div class="range-head"><span class="lbl" style="margin:0">Min Rating</span><span class="range-val" id="fvMinRat">3.5</span></div>
+                <input type="range" id="fMinRat" min="1" max="5" value="3.5" step="0.1"/>
+              </div>
+
+              <div>
+                <label class="lbl">Include Keyword</label>
+                <input type="text" class="inp" id="fKw" placeholder="dental, hvac..."/>
+              </div>
+              <div>
+                <label class="lbl">Exclude Keywords</label>
+                <input type="text" class="inp" id="fExcKw" placeholder="inc, llc, chain..."/>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+            <div class="lbl">Quick Presets</div>
+            <div class="chip-row">
+              <div class="chip" data-fp="strict">Strict</div>
+              <div class="chip" data-fp="medium">Medium</div>
+              <div class="chip" data-fp="wide">Wide</div>
+              <div class="chip" data-fp="zero">Low Reviews</div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" id="fApply" style="flex:1">Apply</button>
+            <button class="btn btn-outline" id="fReset">Reset</button>
+          </div>
+        </div>
+
+        <!-- RIGHT: RESULTS -->
+        <div>
+          <div class="grid4" style="margin-bottom:16px">
+            <div class="card-sm" style="text-align:center"><div style="font-family:var(--serif);font-size:28px;font-weight:700;color:var(--cream)" id="fs-total">—</div><div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Total</div></div>
+            <div class="card-sm" style="text-align:center"><div style="font-family:var(--serif);font-size:28px;font-weight:700;color:var(--green)" id="fs-pass">—</div><div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Acquired</div></div>
+            <div class="card-sm" style="text-align:center"><div style="font-family:var(--serif);font-size:28px;font-weight:700;color:var(--danger)" id="fs-fail">—</div><div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Filtered Out</div></div>
+            <div class="card-sm" style="text-align:center"><div style="font-family:var(--serif);font-size:28px;font-weight:700;color:var(--warn)" id="fs-rate">—</div><div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">Hit Rate</div></div>
+          </div>
+
+          <!-- MAPPER -->
+          <div class="card" style="margin-bottom:16px;display:none" id="fMapperCard">
+            <div class="sec-head" style="margin-bottom:14px"><div class="sec-title"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Column Mapping</div></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px" id="fMapper"></div>
+          </div>
+
+          <div class="card" id="fTableCard">
+            <div class="sec-head" style="margin-bottom:14px">
+              <div class="sec-title"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Results</div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-primary btn-sm" id="fSendToLeads" style="display:none">Send to Lead Intelligence</button>
+                <button class="btn btn-outline btn-sm" id="fDownload" style="display:none">Export CSV</button>
+              </div>
+            </div>
+            <div class="tbl-wrap" id="fTableWrap">
+              <div style="text-align:center;padding:40px;color:var(--muted);font-size:12px">Upload a CSV to see filtered results.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: CALL TRACKER ══ -->
+  <div class="page" id="page-calls">
+    <div style="max-width:1100px">
+
+      <div class="gaia-strip">
+        <div class="gaia-ico"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07"/></svg></div>
+        <span class="gaia-label">G.A.I.A.</span>
+        <span style="font-size:12px;color:var(--text);font-weight:300">Track every call, log outcomes, and monitor your daily hit rate. The more you log, the smarter the dashboard gets, boss.</span>
+      </div>
+
+      <div class="call-stats-row">
+        <div class="scard scard-b"><div class="scard-icon"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07"/></svg></div><div class="scard-n" id="cs-total">0</div><div class="scard-lbl">Total Calls</div></div>
+        <div class="scard scard-g"><div class="scard-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="scard-n" id="cs-int">0</div><div class="scard-lbl">Interested</div></div>
+        <div class="scard scard-r"><div class="scard-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div><div class="scard-n" id="cs-notint">0</div><div class="scard-lbl">Not Interested</div></div>
+        <div class="scard scard-y"><div class="scard-icon"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="scard-n" id="cs-nm">0</div><div class="scard-lbl">No Answer</div></div>
+        <div class="scard" style="border-color:var(--muted2)"><div class="scard-icon" style="background:rgba(200,212,202,.06);color:var(--cream)"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="scard-n" style="color:var(--cream)" id="cs-rate">0%</div><div class="scard-lbl">Conversion</div></div>
+      </div>
+
+      <div class="grid2">
+        <!-- LOG CALL -->
+        <div class="card">
+          <div class="sec-head"><div class="sec-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Log a Call</div></div>
+
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div>
+              <label class="lbl">Business Name</label>
+              <input type="text" class="inp" id="callName" placeholder="Enter or select from loaded leads"/>
+            </div>
+            <div>
+              <label class="lbl">Phone Number</label>
+              <input type="text" class="inp" id="callPhone" placeholder="(xxx) xxx-xxxx"/>
+            </div>
+            <div class="grid2" style="gap:10px">
+              <div>
+                <label class="lbl">Outcome</label>
+                <select class="inp" id="callOutcome">
+                  <option value="">Select outcome</option>
+                  <option value="interested">Interested</option>
+                  <option value="not-interested">Not Interested</option>
+                  <option value="no-answer">No Answer</option>
+                  <option value="voicemail">Left Voicemail</option>
+                  <option value="callback">Call Back Later</option>
+                  <option value="wrong-number">Wrong Number</option>
+                </select>
+              </div>
+              <div>
+                <label class="lbl">Niche</label>
+                <select class="inp" id="callNiche">
+                  <option value="">Select niche</option>
+                  <option>HVAC</option><option>Dental</option><option>Plumbing</option>
+                  <option>Med Spa</option><option>Auto Repair</option><option>Other</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <label class="lbl">Notes</label>
+              <textarea class="inp" id="callNotes" placeholder="Contact said they're interested in website redesign, follow up Friday..." style="min-height:70px;resize:vertical"></textarea>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary" id="logCallBtn" style="flex:1">
+                <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.96 9.7 19.79 19.79 0 01.9 1.1 2 2 0 012.88.01h3a2 2 0 012 1.72"/></svg>
+                Log Call
+              </button>
+              <button class="btn btn-ghost" id="clearCallBtn">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CALL LOG -->
+        <div class="card">
+          <div class="sec-head">
+            <div class="sec-title"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Call Log</div>
+            <button class="btn btn-outline btn-sm" id="exportCallsBtn">Export</button>
+          </div>
+          <div id="callLog" style="max-height:360px;overflow-y:auto">
+            <div style="text-align:center;padding:40px;color:var(--muted);font-size:12px">No calls logged yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: SCRIPTS & NOTES ══ -->
+  <div class="page" id="page-scripts">
+    <div style="max-width:1000px">
+      <div class="gaia-strip">
+        <div class="gaia-ico"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/></svg></div>
+        <span class="gaia-label">G.A.I.A.</span>
+        <span style="font-size:12px;color:var(--text);font-weight:300">Your pitch scripts, objection handlers, and notes — all in one place. Click any script to expand and edit, boss.</span>
+      </div>
+
+      <div class="sec-head">
+        <div class="sec-title"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Pitch Scripts</div>
+        <button class="btn btn-primary btn-sm" id="addScriptBtn">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Script
+        </button>
+      </div>
+
+      <div class="grid3" id="scriptsGrid" style="margin-bottom:24px"></div>
+
+      <div class="sec-head">
+        <div class="sec-title"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>General Notes</div>
+      </div>
+      <div class="card">
+        <textarea class="inp" id="generalNotes" placeholder="Team notes, strategy updates, daily targets..." style="min-height:160px;resize:vertical;width:100%"></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:10px">
+          <button class="btn btn-primary btn-sm" id="saveNotesBtn">Save Notes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE: ANALYTICS ══ -->
+  <div class="page" id="page-analytics">
+    <div style="max-width:1100px">
+      <div class="gaia-strip">
+        <div class="gaia-ico"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <span class="gaia-label">G.A.I.A.</span>
+        <span style="font-size:12px;color:var(--text);font-weight:300">Full operation analytics. Every metric tracked and visualised. More data logged = sharper insights, boss.</span>
+      </div>
+
+      <div class="grid4 gap">
+        <div class="scard scard-g"><div class="scard-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="scard-n" id="an-totalLeads">0</div><div class="scard-lbl">Total Leads Loaded</div></div>
+        <div class="scard scard-b"><div class="scard-icon"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2"/></svg></div><div class="scard-n" id="an-totalCalls">0</div><div class="scard-lbl">Calls Made</div></div>
+        <div class="scard scard-y"><div class="scard-icon"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="scard-n" id="an-convRate">0%</div><div class="scard-lbl">Conversion Rate</div></div>
+        <div class="scard scard-r"><div class="scard-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="scard-n" id="an-avgPerDay">0</div><div class="scard-lbl">Avg Calls / Day</div></div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="sec-head"><div class="sec-title"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Outcome Breakdown</div></div>
+          <div id="outcomeChart" style="padding:8px 0"></div>
+        </div>
+        <div class="card">
+          <div class="sec-head"><div class="sec-title"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>By Niche</div></div>
+          <div id="nicheAnalytics" style="padding:8px 0"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="sec-head"><div class="sec-title"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Activity Timeline (Last 7 Days)</div></div>
+        <div style="display:flex;align-items:flex-end;gap:6px;height:80px;padding:8px 0" id="timelineChart">
+          <div style="text-align:center;color:var(--muted);font-size:12px;width:100%;padding-top:20px">No activity yet.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end main -->
+</div><!-- end shell -->
+
+<!-- ══ LEAD MODAL ══ -->
+<div class="modal-bg" id="leadModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div style="font-size:9px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--green);margin-bottom:6px" id="mNiche">—</div>
+        <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--cream)" id="mName">—</div>
+      </div>
+      <div class="modal-close" id="modalClose"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+    </div>
+    <div class="modal-body">
+      <div class="grid2" style="gap:14px;margin-bottom:20px">
+        <div class="card-sm"><div class="lbl">Phone Number</div><div style="font-size:15px;font-weight:600;color:var(--cream);font-family:monospace" id="mPhone">—</div></div>
+        <div class="card-sm"><div class="lbl">Website</div><div style="font-size:13px" id="mWebsite">—</div></div>
+        <div class="card-sm"><div class="lbl">Rating</div><div style="font-size:22px;font-weight:700;font-family:var(--serif)" id="mRating">—</div></div>
+        <div class="card-sm"><div class="lbl">Review Count</div><div style="font-size:22px;font-weight:700;font-family:var(--serif);color:var(--blue)" id="mReviews">—</div></div>
+      </div>
+
+      <div class="card-sm" style="margin-bottom:16px">
+        <div class="lbl">Competition in Area</div>
+        <div class="competition-bar" id="mComp">—</div>
+      </div>
+
+      <div class="card-sm" style="margin-bottom:16px">
+        <div class="lbl">Key Facts & Opportunity</div>
+        <div id="mFacts" style="font-size:12px;color:var(--text);line-height:1.7"></div>
+      </div>
+
+      <div class="card-sm" style="margin-bottom:16px">
+        <div class="lbl">Suggested Pitch Angle</div>
+        <div id="mPitch" style="font-size:12px;color:var(--green);font-style:italic;line-height:1.6"></div>
+      </div>
+
+      <div class="hr"></div>
+      <div class="lbl">Log Call Outcome</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <button class="btn btn-sm" style="background:rgba(62,207,106,.15);color:var(--green);border:1px solid rgba(62,207,106,.3)" onclick="logFromModal('interested')">Interested</button>
+        <button class="btn btn-sm" style="background:rgba(224,92,110,.1);color:var(--danger);border:1px solid rgba(224,92,110,.25)" onclick="logFromModal('not-interested')">Not Interested</button>
+        <button class="btn btn-sm btn-outline" onclick="logFromModal('no-answer')">No Answer</button>
+        <button class="btn btn-sm btn-outline" onclick="logFromModal('voicemail')">Voicemail</button>
+        <button class="btn btn-sm btn-outline" onclick="logFromModal('skipped')">Skip</button>
+      </div>
+      <div id="mStatus" style="font-size:11px;color:var(--muted)"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCRIPT MODAL ══ -->
+<div class="modal-bg" id="scriptModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div style="font-family:var(--serif);font-size:20px;font-weight:600;color:var(--cream)">Script Editor</div>
+      <div class="modal-close" id="scriptModalClose"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div><label class="lbl">Script Title</label><input type="text" class="inp" id="sTitle" placeholder="e.g. HVAC Opener, Objection Handler — Cost"/></div>
+        <div><label class="lbl">Type</label>
+          <select class="inp" id="sType">
+            <option>Opening</option><option>Objection Handler</option><option>Follow-Up</option><option>Closing</option><option>Voicemail</option>
+          </select>
+        </div>
+        <div><label class="lbl">Script Content</label><textarea class="inp" id="sContent" style="min-height:200px;resize:vertical" placeholder="Hey, this is [Name] calling from Green Solutions..."></textarea></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" id="saveScriptBtn" style="flex:1">Save Script</button>
+          <button class="btn btn-ghost" id="deleteScriptBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════ */
+let state = {
+  leads: JSON.parse(localStorage.getItem('gs_leads')||'[]'),
+  calls: JSON.parse(localStorage.getItem('gs_calls')||'[]'),
+  scripts: JSON.parse(localStorage.getItem('gs_scripts')||'[]'),
+  notes: localStorage.getItem('gs_notes')||'',
+  filterRows: [],
+  filterHeaders: [],
+  filterMap: {name:'',reviews:'',rating:'',phone:'',website:'',category:''},
+  currentModal: null,
+  currentScriptIdx: null,
+};
+function save(key){ localStorage.setItem('gs_'+key, JSON.stringify(state[key])); }
+
+/* ═══════════════════════════════════════════════════════
+   NAV
+═══════════════════════════════════════════════════════ */
+const pageTitles = {dashboard:'Dashboard',leads:'Lead Intelligence',filter:'Lead Filter',calls:'Call Tracker',scripts:'Scripts & Notes',analytics:'Analytics'};
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+    item.classList.add('active');
+    const p = item.dataset.page;
+    document.getElementById('page-'+p).classList.add('active');
+    document.getElementById('pageTitle').textContent = pageTitles[p]||p;
+    if(p==='dashboard') refreshDashboard();
+    if(p==='analytics') refreshAnalytics();
+  });
+});
+
+/* ═══════════════════════════════════════════════════════
+   CLOCKS
+═══════════════════════════════════════════════════════ */
+const TZ_CITIES = [
+  {name:'Los Angeles', tz:'America/Los_Angeles', short:'LA'},
+  {name:'Chicago',     tz:'America/Chicago',     short:'CHI'},
+  {name:'New York',    tz:'America/New_York',     short:'NYC'},
+  {name:'London',      tz:'Europe/London',        short:'LON'},
+];
+function isBusinessHours(tz){
+  const d=new Date();const opts={timeZone:tz,hour:'numeric',hour12:false};
+  const h=parseInt(new Intl.DateTimeFormat('en',opts).format(d));
+  const day=new Intl.DateTimeFormat('en',{timeZone:tz,weekday:'short'}).format(d);
+  return !['Sat','Sun'].includes(day) && h>=8 && h<18;
+}
+function formatTime(tz){
+  return new Intl.DateTimeFormat('en',{timeZone:tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).format(new Date());
+}
+function renderClocks(){
+  const row = document.getElementById('clocksRow');
+  row.innerHTML = TZ_CITIES.map(c=>{
+    const open = isBusinessHours(c.tz);
+    return `<div class="clock-item">
+      <div class="clock-city">${c.short}</div>
+      <div class="clock-time tz-t" data-tz="${c.tz}">${formatTime(c.tz)}</div>
+      <div class="clock-biz ${open?'biz-open':'biz-closed'}">${open?'Open':'Closed'}</div>
+    </div>`;
+  }).join('<div style="width:1px;height:28px;background:var(--muted2)"></div>');
+}
+function renderTZCards(){
+  const row = document.getElementById('tzRow');
+  row.innerHTML = TZ_CITIES.map(c=>{
+    const open=isBusinessHours(c.tz);
+    return `<div class="tz-card ${open?'open-zone':'closed-zone'}">
+      <div class="tz-name">${c.name}</div>
+      <div class="tz-time tz-t2" data-tz="${c.tz}">${formatTime(c.tz)}</div>
+      <div class="tz-status ${open?'tz-open':'tz-closed'}">${open?'Business Hours — Good to Call':'Closed'}</div>
+    </div>`;
+  }).join('');
+}
+function tickClocks(){
+  document.querySelectorAll('.tz-t').forEach(el=>el.textContent=formatTime(el.dataset.tz));
+  document.querySelectorAll('.tz-t2').forEach(el=>el.textContent=formatTime(el.dataset.tz));
+}
+renderClocks(); renderTZCards();
+setInterval(()=>{ tickClocks(); },1000);
+
+/* ═══════════════════════════════════════════════════════
+   GAIA TYPEWRITER
+═══════════════════════════════════════════════════════ */
+const GAIA_LINES=[
+  "Good morning, boss. Operation overview is loaded. Clocks are running. What's the move today?",
+  "All systems green. Lead database is ready. Load up some targets and let's get to work.",
+  "Ready when you are, boss. Every metric is being tracked in real-time.",
+];
+let gi=0,gc=0,gTyping=true;
+const gaiaEl=document.getElementById('gaiaMsg');
+function gaiaType(){
+  const line=GAIA_LINES[gi];
+  if(gTyping){gaiaEl.textContent=line.slice(0,gc++);if(gc>line.length){gTyping=false;setTimeout(gaiaType,3000);return;}setTimeout(gaiaType,24);}
+  else{gTyping=true;gc=0;gi=(gi+1)%GAIA_LINES.length;setTimeout(gaiaType,300);}
+}
+gaiaType();
+
+/* ═══════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════ */
+let toastT;
+function toast(msg,type='green'){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.borderLeftColor=type==='red'?'var(--danger)':type==='warn'?'var(--warn)':'var(--green)';
+  t.classList.add('up');clearTimeout(toastT);
+  toastT=setTimeout(()=>t.classList.remove('up'),3200);
+}
+
+/* ═══════════════════════════════════════════════════════
+   DASHBOARD REFRESH
+═══════════════════════════════════════════════════════ */
+function refreshDashboard(){
+  const total=state.leads.length;
+  const called=state.calls.length;
+  const interested=state.calls.filter(c=>c.outcome==='interested').length;
+  const conv=called?Math.round(interested/called*100):0;
+  animN('kpi-total',total);
+  animN('kpi-called',called);
+  animN('kpi-interested',interested);
+  document.getElementById('kpi-conv').textContent=conv+'%';
+  document.getElementById('kpi-conv-d').textContent=called?`${called} calls made`:'No calls yet';
+  document.getElementById('kpi-total-d').textContent=total?`${total} leads loaded`:'Upload CSV to begin';
+  const calledPct=total?Math.min(called/total*100,100):0;
+  const intPct=called?Math.min(interested/called*100,100):0;
+  document.getElementById('kpi-called-bar').style.width=calledPct+'%';
+  document.getElementById('kpi-int-bar').style.width=intPct+'%';
+  renderActivity();
+  renderCallBreakdown();
+  renderNicheBreakdown();
+  renderTZCards();
+  document.getElementById('nb-leads').textContent=total||0;
+}
+
+function animN(id,val){
+  const el=document.getElementById(id);if(!el)return;
+  const cur=parseInt(el.textContent)||0;const diff=val-cur;let i=0;
+  const t=setInterval(()=>{el.textContent=Math.round(cur+diff*(i/20));if(++i>20){el.textContent=val;clearInterval(t);}},20);
+}
+
+function renderActivity(){
+  const feed=document.getElementById('activityFeed');
+  const recent=[...state.calls].reverse().slice(0,8);
+  if(!recent.length){feed.innerHTML='<div style="text-align:center;padding:24px;color:var(--muted);font-size:12px">No activity yet.</div>';return;}
+  const outcomeColor={interested:'g',not_interested:'r','not-interested':'r','no-answer':'y',voicemail:'y',skipped:'y',callback:'b'};
+  feed.innerHTML=recent.map(c=>`
+    <div class="activity-item">
+      <div class="activity-dot activity-dot-${outcomeColor[c.outcome]||'y'}"></div>
+      <div class="activity-text"><strong style="color:var(--cream)">${c.name}</strong> — ${c.outcome.replace(/-/g,' ')}</div>
+      <div class="activity-time">${c.time||'—'}</div>
+    </div>`).join('');
+}
+
+function renderCallBreakdown(){
+  const el=document.getElementById('callBreakdown');
+  const outcomes={interested:0,'not-interested':0,'no-answer':0,voicemail:0,callback:0,skipped:0};
+  state.calls.forEach(c=>{if(outcomes[c.outcome]!==undefined)outcomes[c.outcome]++;});
+  const total=state.calls.length||1;
+  const rows=Object.entries(outcomes).filter(([,v])=>v>0);
+  if(!rows.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:24px">No calls logged yet.</div>';return;}
+  const colors={interested:'var(--green)','not-interested':'var(--danger)','no-answer':'var(--warn)',voicemail:'var(--warn)',callback:'var(--blue)',skipped:'var(--muted)'};
+  el.innerHTML=rows.map(([k,v])=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(200,212,202,.04)">
+      <div style="font-size:11px;color:var(--text);width:120px;text-transform:capitalize">${k.replace(/-/g,' ')}</div>
+      <div style="flex:1;height:3px;background:rgba(200,212,202,.1);border-radius:2px"><div style="height:100%;border-radius:2px;background:${colors[k]};width:${v/total*100}%;transition:width .5s"></div></div>
+      <div style="font-size:12px;font-weight:600;color:${colors[k]};width:24px;text-align:right">${v}</div>
+    </div>`).join('');
+}
+
+function renderNicheBreakdown(){
+  const el=document.getElementById('nicheBreakdown');
+  const niches={};
+  state.leads.forEach(l=>{const n=l.category||l.niche||'Unknown';niches[n]=(niches[n]||0)+1;});
+  const entries=Object.entries(niches).sort((a,b)=>b[1]-a[1]);
+  if(!entries.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:24px">Upload leads to see niche breakdown.</div>';return;}
+  const max=entries[0][1];
+  document.getElementById('nicheCount').textContent=`${entries.length} niches`;
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px">`+
+    entries.map(([n,v])=>`
+      <div style="background:var(--ink3);border:1px solid var(--muted2);border-radius:10px;padding:14px">
+        <div style="font-size:12px;font-weight:600;color:var(--cream);margin-bottom:4px">${n}</div>
+        <div style="font-size:20px;font-weight:700;font-family:var(--serif);color:var(--green);margin-bottom:8px">${v}</div>
+        <div class="pbar pbar-g"><div class="pbar-fill" style="width:${v/max*100}%"></div></div>
+      </div>`).join('')+'</div>';
+}
+
+/* ═══════════════════════════════════════════════════════
+   LEADS PAGE
+═══════════════════════════════════════════════════════ */
+const leadsDropZone=document.getElementById('leadsDropZone');
+const leadsFile=document.getElementById('leadsFile');
+leadsDropZone.addEventListener('click',()=>leadsFile.click());
+leadsDropZone.addEventListener('dragover',e=>{e.preventDefault();leadsDropZone.classList.add('drag');});
+leadsDropZone.addEventListener('dragleave',()=>leadsDropZone.classList.remove('drag'));
+leadsDropZone.addEventListener('drop',e=>{e.preventDefault();leadsDropZone.classList.remove('drag');const f=e.dataTransfer.files[0];f&&parseLeadsCSV(f);});
+leadsFile.addEventListener('change',()=>leadsFile.files[0]&&parseLeadsCSV(leadsFile.files[0]));
+
+function parseLeadsCSV(file){
+  const r=new FileReader();
+  r.onload=e=>{
+    const text=e.target.result;
+    const lines=text.trim().split(/\r?\n/);
+    const delim=lines[0].includes('\t')?'\t':',';
+    function spl(line){const r=[];let c='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"')q=!q;else if(ch===delim&&!q){r.push(c.trim());c='';}else c+=ch;}r.push(c.trim());return r;}
+    const headers=spl(lines[0]).map(h=>h.replace(/^"|"$/g,'').trim());
+    const rows=lines.slice(1).filter(l=>l.trim()).map(line=>{
+      const v=spl(line);const row={};
+      headers.forEach((h,i)=>row[h]=(v[i]||'').replace(/^"|"$/g,'').trim());
+      return row;
+    });
+    // Auto detect key columns
+    const g=c=>headers.find(h=>c.some(x=>h.toLowerCase().replace(/\W/g,'').includes(x)))||'';
+    const nameCol=g(['name','businessname','title','company']);
+    const revCol=g(['reviewcount','reviews','numreviews','ratingcount']);
+    const ratCol=g(['rating','avgrating','starrating','score']);
+    const phoneCol=g(['phone','tel','mobile','contact']);
+    const webCol=g(['website','url','site','web','homepage']);
+    const catCol=g(['category','type','niche','industry']);
+    const addrCol=g(['address','city','location','addr']);
+
+    const leads=rows.map((row,i)=>({
+      id: Date.now()+i,
+      name: row[nameCol]||`Business ${i+1}`,
+      reviews: row[revCol]||'—',
+      rating: row[ratCol]||'—',
+      phone: row[phoneCol]||'—',
+      website: row[webCol]||'—',
+      category: row[catCol]||'General',
+      address: row[addrCol]||'—',
+      status:'uncalled',
+      notes:'',
+      raw:row,
+    }));
+
+    state.leads=[...state.leads,...leads];
+    save('leads');
+    renderLeadsGrid();
+    document.getElementById('leadsSection').style.display='block';
+    refreshDashboard();
+    toast(`${leads.length} leads loaded successfully, boss.`);
+    // Populate niche filter
+    populateNicheFilter();
+  };
+  r.readAsText(file);
+}
+
+function competitionLevel(reviews){
+  const n=parseInt(reviews)||0;
+  if(n<30) return {level:'low',label:'Low Competition',class:'comp-low'};
+  if(n<100) return {level:'med',label:'Moderate',class:'comp-med'};
+  return {level:'high',label:'High Competition',class:'comp-high'};
+}
+
+function generateFacts(lead){
+  const rev=parseInt(lead.reviews)||0;
+  const rat=parseFloat(lead.rating)||0;
+  const facts=[];
+  if(rev<30) facts.push('Very few online reviews — almost invisible to new customers searching Google.');
+  else if(rev<80) facts.push('Mid-level review count — room to grow authority in local search.');
+  else facts.push('Established review presence — competitor may already have some digital investment.');
+  if(rat>0 && rat<3.8) facts.push(`Low ${rat}★ rating — unhappy customers and zero reputation management. Easy pitch.`);
+  else if(rat>=3.8 && rat<=4.4) facts.push(`${rat}★ rating — solid but below the 4.6 threshold that drives new patient trust.`);
+  else if(rat>4.4) facts.push(`Strong ${rat}★ rating — great reputation, pitch review volume and retention automation.`);
+  if(lead.phone==='—'||!lead.phone) facts.push('No phone number found — may be hard to reach, try website contact form.');
+  if(lead.website==='—'||!lead.website) facts.push('No website detected — extremely easy pitch: they literally have no digital presence.');
+  facts.push(`Niche: ${lead.category||'General'} — typical customer LTV ranges from $500 to $5,000+.`);
+  return facts;
+}
+
+function generatePitch(lead){
+  const rev=parseInt(lead.reviews)||0;
+  const pitches=[
+    `"Hey, I was looking at your Google profile — you've got ${rev||'very few'} reviews. Most of your competitors have 3–4x that. We have a system that automates review collection after every job. Worth a 10-minute call?"`,
+    `"I noticed you don't have a booking system on your website. We help businesses like yours capture leads 24/7 with an AI voice agent — even when you're closed. Can I show you how it works?"`,
+    `"Your Google rating is solid but your review count is low. We can get you to 200+ reviews in 90 days, fully automated. That's exactly what pushes you to the top of local search."`,
+  ];
+  return pitches[rev%pitches.length];
+}
+
+function renderLeadsGrid(){
+  const grid=document.getElementById('leadsGrid');
+  const search=document.getElementById('leadSearch').value.toLowerCase();
+  const statusF=document.getElementById('leadStatusFilter').value;
+  const nicheF=document.getElementById('leadNicheFilter').value;
+
+  let leads=state.leads.filter(l=>{
+    if(search && !l.name.toLowerCase().includes(search) && !(l.category||'').toLowerCase().includes(search)) return false;
+    if(statusF && l.status!==statusF) return false;
+    if(nicheF && (l.category||'')!==nicheF) return false;
+    return true;
+  });
+
+  if(!leads.length){
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:12px">No leads match your filters.</div>';
+    return;
+  }
+
+  const statusColors={uncalled:'var(--muted2)',called:'var(--blue)',interested:'var(--green)','not-interested':'var(--danger)',skipped:'var(--warn)',voicemail:'var(--warn)'};
+
+  grid.innerHTML=leads.map(l=>{
+    const comp=competitionLevel(l.reviews);
+    const rat=parseFloat(l.rating)||0;
+    const ratColor=rat>=4.0?'var(--green)':rat>=3.0?'var(--warn)':'var(--danger)';
+    return `<div class="lead-card ${l.status}" data-id="${l.id}" onclick="openLead(${l.id})">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted)">${l.category||'General'}</div>
+        <span class="pill" style="background:${statusColors[l.status]}18;color:${statusColors[l.status]};border-color:${statusColors[l.status]}44;font-size:8px">${l.status.replace(/-/g,' ')}</span>
+      </div>
+      <div class="lead-name">${l.name}</div>
+      <div class="lead-meta">
+        <div class="lead-meta-item"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07"/></svg>${l.phone}</div>
+        ${rat?`<div class="lead-meta-item" style="color:${ratColor}"><svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>${l.rating}★</div>`:''}
+        <div class="lead-meta-item"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>${l.reviews} reviews</div>
+      </div>
+      <div class="competition-bar ${comp.class}">
+        <div class="comp-label">Competition</div>
+        <div class="comp-track"><div class="comp-fill"></div></div>
+        <div class="comp-val">${comp.label.split(' ')[0]}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function populateNicheFilter(){
+  const sel=document.getElementById('leadNicheFilter');
+  const niches=[...new Set(state.leads.map(l=>l.category||'General'))];
+  sel.innerHTML='<option value="">All Niches</option>'+niches.map(n=>`<option>${n}</option>`).join('');
+}
+
+document.getElementById('leadSearch').addEventListener('input',renderLeadsGrid);
+document.getElementById('leadStatusFilter').addEventListener('change',renderLeadsGrid);
+document.getElementById('leadNicheFilter').addEventListener('change',renderLeadsGrid);
+document.getElementById('clearLeadsBtn').addEventListener('click',()=>{
+  if(!confirm('Clear all loaded leads? This cannot be undone.'))return;
+  state.leads=[];save('leads');
+  document.getElementById('leadsSection').style.display='none';
+  refreshDashboard();toast('Leads cleared.','warn');
+});
+
+if(state.leads.length){
+  document.getElementById('leadsSection').style.display='block';
+  renderLeadsGrid();populateNicheFilter();
+}
+
+/* ═══════════════════════════════════════════════════════
+   LEAD MODAL
+═══════════════════════════════════════════════════════ */
+function openLead(id){
+  const lead=state.leads.find(l=>l.id===id);if(!lead)return;
+  state.currentModal=id;
+  document.getElementById('mNiche').textContent=lead.category||'General';
+  document.getElementById('mName').textContent=lead.name;
+  document.getElementById('mPhone').textContent=lead.phone;
+  document.getElementById('mWebsite').innerHTML=lead.website&&lead.website!=='—'?`<a href="${lead.website.startsWith('http')?lead.website:'https://'+lead.website}" target="_blank" style="color:var(--green)">${lead.website}</a>`:'— No website found';
+  const rat=parseFloat(lead.rating)||0;
+  const ratColor=rat>=4.0?'var(--green)':rat>=3.0?'var(--warn)':'var(--danger)';
+  document.getElementById('mRating').innerHTML=`<span style="color:${ratColor}">${lead.rating}★</span>`;
+  document.getElementById('mReviews').textContent=lead.reviews;
+  const comp=competitionLevel(lead.reviews);
+  document.getElementById('mComp').innerHTML=`<div class="competition-bar ${comp.class}" style="margin-top:0"><div class="comp-label" style="width:60px">Area</div><div class="comp-track" style="flex:1"><div class="comp-fill"></div></div><div class="comp-val">${comp.label}</div></div>`;
+  const facts=generateFacts(lead);
+  document.getElementById('mFacts').innerHTML=facts.map(f=>`<div style="display:flex;gap:8px;margin-bottom:6px"><span style="color:var(--green);flex-shrink:0">›</span>${f}</div>`).join('');
+  document.getElementById('mPitch').textContent=generatePitch(lead);
+  const callsForLead=state.calls.filter(c=>c.leadId===id);
+  document.getElementById('mStatus').textContent=callsForLead.length?`Last outcome: ${callsForLead[callsForLead.length-1].outcome.replace(/-/g,' ')} at ${callsForLead[callsForLead.length-1].time}`:'Not yet called.';
+  document.getElementById('leadModal').classList.add('open');
+}
+document.getElementById('modalClose').addEventListener('click',()=>document.getElementById('leadModal').classList.remove('open'));
+document.getElementById('leadModal').addEventListener('click',e=>{if(e.target===document.getElementById('leadModal'))document.getElementById('leadModal').classList.remove('open');});
+
+function logFromModal(outcome){
+  const lead=state.leads.find(l=>l.id===state.currentModal);if(!lead)return;
+  lead.status=outcome;
+  const call={id:Date.now(),name:lead.name,phone:lead.phone,outcome,niche:lead.category||'',notes:'',time:new Date().toLocaleTimeString(),date:new Date().toLocaleDateString(),leadId:lead.id};
+  state.calls.push(call);save('calls');save('leads');
+  document.getElementById('mStatus').textContent=`Logged: ${outcome.replace(/-/g,' ')} at ${call.time}`;
+  renderLeadsGrid();refreshDashboard();refreshCallStats();
+  toast(`Call logged: ${outcome.replace(/-/g,' ')}, boss.`);
+}
+
+/* ═══════════════════════════════════════════════════════
+   FILTER TOOL
+═══════════════════════════════════════════════════════ */
+let fRows=[],fHeaders=[],fMap={name:'',reviews:'',rating:'',phone:'',website:''};
+
+const filterDrop=document.getElementById('filterDrop');
+const filterFile=document.getElementById('filterFile');
+filterDrop.addEventListener('click',()=>filterFile.click());
+filterDrop.addEventListener('dragover',e=>{e.preventDefault();filterDrop.classList.add('drag');});
+filterDrop.addEventListener('dragleave',()=>filterDrop.classList.remove('drag'));
+filterDrop.addEventListener('drop',e=>{e.preventDefault();filterDrop.classList.remove('drag');const f=e.dataTransfer.files[0];f&&loadFilterCSV(f);});
+filterFile.addEventListener('change',()=>filterFile.files[0]&&loadFilterCSV(filterFile.files[0]));
+
+function loadFilterCSV(file){
+  const r=new FileReader();
+  r.onload=e=>{
+    const text=e.target.result;
+    const lines=text.trim().split(/\r?\n/);
+    const delim=lines[0].includes('\t')?'\t':',';
+    function spl(l){const r=[];let c='',q=false;for(let i=0;i<l.length;i++){const ch=l[i];if(ch==='"')q=!q;else if(ch===delim&&!q){r.push(c.trim());c='';}else c+=ch;}r.push(c.trim());return r;}
+    fHeaders=spl(lines[0]).map(h=>h.replace(/^"|"$/g,'').trim());
+    fRows=lines.slice(1).filter(l=>l.trim()).map(line=>{const v=spl(line);const row={};fHeaders.forEach((h,i)=>row[h]=(v[i]||'').replace(/^"|"$/g,'').trim());return row;});
+    document.getElementById('filterFileTag').textContent=`${file.name} · ${fRows.length} records`;
+    autoDetectFilter();buildFilterMapper();
+    document.getElementById('fMapperCard').style.display='block';
+    document.getElementById('fSendToLeads').style.display='inline-flex';
+    document.getElementById('fDownload').style.display='inline-flex';
+    applyFilter();
+    document.getElementById('filterGaiaMsg').textContent=`Got it, boss. ${fRows.length} records loaded. Set your filters and I'll cut the list down.`;
+  };
+  r.readAsText(file);
+}
+function autoDetectFilter(){
+  const g=c=>fHeaders.find(h=>c.some(x=>h.toLowerCase().replace(/\W/g,'').includes(x)))||'';
+  fMap.name=g(['name','businessname','title','company']);
+  fMap.reviews=g(['reviewcount','reviews','numreviews','ratingcount']);
+  fMap.rating=g(['rating','avgrating','starrating','score']);
+  fMap.phone=g(['phone','tel','mobile','contact']);
+  fMap.website=g(['website','url','site','homepage']);
+}
+function buildFilterMapper(){
+  const m=document.getElementById('fMapper');m.innerHTML='';
+  const defs=[{k:'name',l:'Business Name'},{k:'reviews',l:'Reviews *'},{k:'rating',l:'Rating *'},{k:'phone',l:'Phone'},{k:'website',l:'Website'}];
+  defs.forEach(def=>{
+    const w=document.createElement('div');
+    w.innerHTML=`<label class="lbl">${def.l}</label>`;
+    const s=document.createElement('select');s.className='inp';s.id='fm_'+def.k;
+    const ig=document.createElement('option');ig.value='';ig.textContent='— ignore —';s.appendChild(ig);
+    fHeaders.forEach(h=>{const o=document.createElement('option');o.value=h;o.textContent=h;if(h===fMap[def.k])o.selected=true;s.appendChild(o);});
+    s.addEventListener('change',()=>{fMap[def.k]=s.value;applyFilter();});
+    w.appendChild(s);m.appendChild(w);
+  });
+}
+function readFilterMapper(){const defs=['name','reviews','rating','phone','website'];defs.forEach(k=>{const s=document.getElementById('fm_'+k);if(s)fMap[k]=s.value;});}
+
+function initFSlider(id,valId,dec){
+  const el=document.getElementById(id),disp=document.getElementById(valId);
+  const upd=()=>{const mn=+el.min,mx=+el.max,v=+el.value;el.style.setProperty('--v',((v-mn)/(mx-mn)*100)+'%');disp.textContent=dec?v.toFixed(1):v;};
+  el.addEventListener('input',()=>{upd();applyFilter();});upd();
+}
+initFSlider('fMaxRev','fvMaxRev',false);initFSlider('fMinRev','fvMinRev',false);
+initFSlider('fMaxRat','fvMaxRat',true);initFSlider('fMinRat','fvMinRat',true);
+document.getElementById('fKw').addEventListener('input',applyFilter);
+document.getElementById('fExcKw').addEventListener('input',applyFilter);
+
+const FPRESETS={strict:{mn:20,mx:50,mr:3.5,xr:4.6},medium:{mn:20,mx:150,mr:3.5,xr:4.7},wide:{mn:5,mx:200,mr:3.0,xr:4.8},zero:{mn:0,mx:30,mr:1.0,xr:5.0}};
+document.querySelectorAll('.chip[data-fp]').forEach(c=>c.addEventListener('click',()=>{
+  document.querySelectorAll('.chip[data-fp]').forEach(x=>x.classList.remove('on'));c.classList.add('on');
+  const p=FPRESETS[c.dataset.fp];if(!p)return;
+  document.getElementById('fMinRev').value=p.mn;document.getElementById('fMaxRev').value=p.mx;
+  document.getElementById('fMinRat').value=p.mr;document.getElementById('fMaxRat').value=p.xr;
+  ['fMinRev','fMaxRev','fMinRat','fMaxRat'].forEach(id=>document.getElementById(id).dispatchEvent(new Event('input')));
+}));
+
+document.getElementById('fApply').addEventListener('click',()=>{applyFilter();toast('Filters applied, boss.');});
+document.getElementById('fReset').addEventListener('click',()=>{
+  ['fMaxRev','fMinRev','fMaxRat','fMinRat'].forEach((id,i)=>{document.getElementById(id).value=[200,0,5,1][i];document.getElementById(id).dispatchEvent(new Event('input'));});
+  document.getElementById('fKw').value='';document.getElementById('fExcKw').value='';
+  document.querySelectorAll('.chip[data-fp]').forEach(x=>x.classList.remove('on'));
+  applyFilter();
+});
+
+let fFiltered=[];
+function applyFilter(){
+  if(!fRows.length)return;
+  readFilterMapper();
+  const maxR=+document.getElementById('fMaxRev').value,minR=+document.getElementById('fMinRev').value;
+  const maxRat=+document.getElementById('fMaxRat').value,minRat=+document.getElementById('fMinRat').value;
+  const kw=document.getElementById('fKw').value.trim().toLowerCase();
+  const exc=document.getElementById('fExcKw').value.split(',').map(s=>s.trim().toLowerCase()).filter(Boolean);
+  let pass=0,fail=0;
+  fFiltered=fRows.map(row=>{
+    let ok=true;const why=[];
+    if(fMap.reviews){const n=parseFloat(row[fMap.reviews]);if(!isNaN(n)){if(n>maxR){ok=false;why.push(`${n}>max`);}if(n<minR){ok=false;why.push(`${n}<min`);}}}
+    if(fMap.rating){const n=parseFloat(row[fMap.rating]);if(!isNaN(n)){if(n>maxRat){ok=false;why.push(`${n}★>max`);}if(n<minRat){ok=false;why.push(`${n}★<min`);}}}
+    if(kw&&fMap.name){if(!(row[fMap.name]||'').toLowerCase().includes(kw)){ok=false;why.push('kw not found');}}
+    if(exc.length&&fMap.name){const h=exc.find(e=>(row[fMap.name]||'').toLowerCase().includes(e));if(h){ok=false;why.push(`excluded: ${h}`);}}
+    ok?pass++:fail++;
+    return{row,ok,why};
+  });
+  document.getElementById('fs-total').textContent=fRows.length;
+  document.getElementById('fs-pass').textContent=pass;
+  document.getElementById('fs-fail').textContent=fail;
+  document.getElementById('fs-rate').textContent=fRows.length?Math.round(pass/fRows.length*100)+'%':'—';
+  renderFilterTable();
+}
+
+function renderFilterTable(){
+  const wrap=document.getElementById('fTableWrap');
+  const cols=[fMap.name,fMap.reviews,fMap.rating,fMap.phone,fMap.website].filter(Boolean);
+  const labels={[fMap.name]:'Name',[fMap.reviews]:'Reviews',[fMap.rating]:'Rating',[fMap.phone]:'Phone',[fMap.website]:'Website'};
+  if(!cols.length){wrap.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px">Map at least one column above.</div>';return;}
+  const vis=fFiltered.filter(r=>r.ok).slice(0,200);
+  const html=`<table><thead><tr><th>Status</th>${cols.map(c=>`<th>${labels[c]||c}</th>`).join('')}</tr></thead><tbody>`+
+    fFiltered.slice(0,300).map(({row,ok,why})=>`<tr${!ok?' style="opacity:.2"':''}><td>${ok?'<span class="pill pill-g">Pass</span>':'<span class="pill pill-r" title="'+why.join(', ')+'">Fail</span>'}</td>${cols.map(c=>`<td title="${row[c]||''}">${row[c]||'—'}</td>`).join('')}</tr>`).join('')+'</tbody></table>';
+  wrap.innerHTML=html;
+}
+
+document.getElementById('fDownload').addEventListener('click',()=>{
+  const passing=fFiltered.filter(r=>r.ok).map(r=>r.row);
+  if(!passing.length){toast('Nothing to export.','warn');return;}
+  const cols=[fMap.name,fMap.reviews,fMap.rating,fMap.phone,fMap.website].filter(Boolean);
+  const hdrs=['Business Name','Reviews','Rating','Phone','Website'].slice(0,cols.length);
+  const esc=v=>'"'+String(v||'').replace(/"/g,'""')+'"';
+  const csv=[hdrs.map(esc).join(','),...passing.map(row=>cols.map(h=>esc(row[h])).join(','))].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=`Green_Filtered_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  toast(`${passing.length} leads exported, boss.`);
+});
+
+document.getElementById('fSendToLeads').addEventListener('click',()=>{
+  const passing=fFiltered.filter(r=>r.ok);
+  if(!passing.length){toast('No passing leads to send.','warn');return;}
+  const leads=passing.map((fr,i)=>({
+    id:Date.now()+i,
+    name:fr.row[fMap.name]||'Unnamed',
+    reviews:fr.row[fMap.reviews]||'—',
+    rating:fr.row[fMap.rating]||'—',
+    phone:fr.row[fMap.phone]||'—',
+    website:fr.row[fMap.website]||'—',
+    category:'Imported',address:'—',status:'uncalled',notes:'',raw:fr.row,
+  }));
+  state.leads=[...state.leads,...leads];save('leads');
+  document.getElementById('leadsSection').style.display='block';
+  renderLeadsGrid();populateNicheFilter();refreshDashboard();
+  document.getElementById('nb-leads').textContent=state.leads.length;
+  toast(`${leads.length} leads sent to Lead Intelligence, boss.`);
+  document.querySelector('[data-page="leads"]').click();
+});
+
+/* ═══════════════════════════════════════════════════════
+   CALL TRACKER
+═══════════════════════════════════════════════════════ */
+function refreshCallStats(){
+  const total=state.calls.length;
+  const int=state.calls.filter(c=>c.outcome==='interested').length;
+  const notint=state.calls.filter(c=>c.outcome==='not-interested').length;
+  const nm=state.calls.filter(c=>c.outcome==='no-answer').length;
+  const conv=total?Math.round(int/total*100):0;
+  document.getElementById('cs-total').textContent=total;
+  document.getElementById('cs-int').textContent=int;
+  document.getElementById('cs-notint').textContent=notint;
+  document.getElementById('cs-nm').textContent=nm;
+  document.getElementById('cs-rate').textContent=conv+'%';
+  renderCallLog();
+}
+function renderCallLog(){
+  const el=document.getElementById('callLog');
+  if(!state.calls.length){el.innerHTML='<div style="text-align:center;padding:40px;color:var(--muted);font-size:12px">No calls logged yet.</div>';return;}
+  const colors={interested:'var(--green)','not-interested':'var(--danger)','no-answer':'var(--warn)',voicemail:'var(--warn)',callback:'var(--blue)',skipped:'var(--muted)','wrong-number':'var(--muted)'};
+  el.innerHTML=[...state.calls].reverse().map(c=>`
+    <div class="call-row">
+      <div class="call-status-dot" style="background:${colors[c.outcome]||'var(--muted)'}"></div>
+      <div>
+        <div class="call-name" style="color:var(--cream);font-weight:500">${c.name}</div>
+        <div class="call-num">${c.phone||'—'}</div>
+        ${c.notes?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${c.notes}</div>`:''}
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <span class="pill" style="background:${colors[c.outcome]||'var(--muted)'}22;color:${colors[c.outcome]||'var(--muted)'};border-color:${colors[c.outcome]||'var(--muted)'}44">${c.outcome.replace(/-/g,' ')}</span>
+        <div class="call-time-tag" style="margin-top:4px">${c.date} ${c.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+document.getElementById('logCallBtn').addEventListener('click',()=>{
+  const name=document.getElementById('callName').value.trim();
+  const phone=document.getElementById('callPhone').value.trim();
+  const outcome=document.getElementById('callOutcome').value;
+  if(!name||!outcome){toast('Fill in name and outcome, boss.','warn');return;}
+  const call={id:Date.now(),name,phone,outcome,niche:document.getElementById('callNiche').value,notes:document.getElementById('callNotes').value,time:new Date().toLocaleTimeString(),date:new Date().toLocaleDateString()};
+  state.calls.push(call);save('calls');
+  // Update lead status if matched
+  const lead=state.leads.find(l=>l.name.toLowerCase()===name.toLowerCase());
+  if(lead){lead.status=outcome;save('leads');}
+  refreshCallStats();refreshDashboard();
+  document.getElementById('callName').value='';document.getElementById('callPhone').value='';
+  document.getElementById('callNotes').value='';document.getElementById('callOutcome').value='';
+  toast(`Call logged, boss. ${outcome.replace(/-/g,' ')}.`);
+  addActivity(`Called ${name} — ${outcome.replace(/-/g,' ')}`,outcome==='interested'?'g':outcome==='not-interested'?'r':'y');
+});
+document.getElementById('clearCallBtn').addEventListener('click',()=>{
+  ['callName','callPhone','callNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('callOutcome').value='';
+});
+document.getElementById('exportCallsBtn').addEventListener('click',()=>{
+  if(!state.calls.length){toast('No calls to export.','warn');return;}
+  const esc=v=>'"'+String(v||'').replace(/"/g,'""')+'"';
+  const hdrs=['Name','Phone','Outcome','Niche','Notes','Date','Time'];
+  const csv=[hdrs.map(esc).join(','),...state.calls.map(c=>[c.name,c.phone,c.outcome,c.niche,c.notes,c.date,c.time].map(esc).join(','))].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download=`Green_Calls_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  toast(`${state.calls.length} calls exported.`);
+});
+
+function addActivity(text,type='g'){
+  const time=new Date().toLocaleTimeString();
+  const feed=document.getElementById('activityFeed');
+  const item=document.createElement('div');
+  item.className='activity-item';
+  item.style.animation='fadeIn .3s ease';
+  item.innerHTML=`<div class="activity-dot activity-dot-${type}"></div><div class="activity-text">${text}</div><div class="activity-time">${time}</div>`;
+  if(feed.querySelector('[style*="No activity"]'))feed.innerHTML='';
+  feed.insertBefore(item,feed.firstChild);
+  if(feed.children.length>8)feed.removeChild(feed.lastChild);
+}
+
+/* ═══════════════════════════════════════════════════════
+   SCRIPTS
+═══════════════════════════════════════════════════════ */
+function renderScripts(){
+  const grid=document.getElementById('scriptsGrid');
+  if(!state.scripts.length){
+    grid.innerHTML=`<div style="grid-column:1/-1">
+      <div class="card" style="text-align:center;padding:40px">
+        <div style="color:var(--muted);font-size:12px;margin-bottom:12px">No scripts yet. Add your first pitch script.</div>
+      </div></div>`;return;
+  }
+  const typeColors={Opening:'var(--green)','Objection Handler':'var(--warn)','Follow-Up':'var(--blue)',Closing:'var(--green)','Voicemail':'var(--muted)'};
+  grid.innerHTML=state.scripts.map((s,i)=>`
+    <div class="script-card" onclick="editScript(${i})">
+      <div class="script-type" style="color:${typeColors[s.type]||'var(--muted)'}">${s.type}</div>
+      <div class="script-title">${s.title}</div>
+      <div class="script-prev">${s.content}</div>
+    </div>`).join('');
+}
+function editScript(i){
+  state.currentScriptIdx=i;
+  const s=state.scripts[i];
+  document.getElementById('sTitle').value=s.title;
+  document.getElementById('sType').value=s.type;
+  document.getElementById('sContent').value=s.content;
+  document.getElementById('scriptModal').classList.add('open');
+}
+document.getElementById('addScriptBtn').addEventListener('click',()=>{
+  state.currentScriptIdx=null;
+  document.getElementById('sTitle').value='';document.getElementById('sContent').value='';
+  document.getElementById('scriptModal').classList.add('open');
+});
+document.getElementById('scriptModalClose').addEventListener('click',()=>document.getElementById('scriptModal').classList.remove('open'));
+document.getElementById('saveScriptBtn').addEventListener('click',()=>{
+  const title=document.getElementById('sTitle').value.trim();
+  const content=document.getElementById('sContent').value.trim();
+  if(!title||!content){toast('Fill in title and content, boss.','warn');return;}
+  const script={title,type:document.getElementById('sType').value,content};
+  if(state.currentScriptIdx!==null)state.scripts[state.currentScriptIdx]=script;
+  else state.scripts.push(script);
+  save('scripts');renderScripts();
+  document.getElementById('scriptModal').classList.remove('open');
+  toast('Script saved, boss.');
+});
+document.getElementById('deleteScriptBtn').addEventListener('click',()=>{
+  if(state.currentScriptIdx===null)return;
+  state.scripts.splice(state.currentScriptIdx,1);save('scripts');renderScripts();
+  document.getElementById('scriptModal').classList.remove('open');
+  toast('Script deleted.','warn');
+});
+
+// Default scripts
+if(!state.scripts.length){
+  state.scripts=[
+    {title:'Cold Open — Review Gap',type:'Opening',content:"Hey, is this [Name]? This is [Your Name] from Green Solutions. I was looking at your Google profile and noticed you've got great service but not many reviews. Most businesses in your area with 3x the reviews are taking the top spots in search. We have a system that automates review collection after every job — takes zero effort on your end. I'd love to show you in 10 minutes, is that cool?"},
+    {title:'Too Busy Objection',type:'Objection Handler',content:"Totally understand, boss. That's actually why we built this — it handles everything automatically, no extra time needed on your end. Most of our clients spend zero time managing it. Can I just send you a quick video to watch when you have 5 minutes?"},
+    {title:'Cost Objection',type:'Objection Handler',content:"Hear you. Here's the thing — if you're missing even 2 inbound calls per week, that's roughly $2,000+ per month in lost revenue depending on your niche. Our system costs a fraction of that and pays for itself in week one. What does one new customer typically bring in for you?"},
+    {title:'Voicemail Script',type:'Voicemail',content:"Hey [Name], this is [Your Name] from Green Solutions. We work with [niche] businesses in the area helping them capture more leads with AI voice agents and review automation. I had a quick idea for your business specifically — give me a call back at [number] whenever you get a chance. No pressure. Appreciate it."},
+  ];
+  save('scripts');
+}
+
+document.getElementById('saveNotesBtn').addEventListener('click',()=>{
+  state.notes=document.getElementById('generalNotes').value;
+  localStorage.setItem('gs_notes',state.notes);
+  toast('Notes saved, boss.');
+});
+document.getElementById('generalNotes').value=state.notes;
+
+/* ═══════════════════════════════════════════════════════
+   ANALYTICS
+═══════════════════════════════════════════════════════ */
+function refreshAnalytics(){
+  document.getElementById('an-totalLeads').textContent=state.leads.length;
+  document.getElementById('an-totalCalls').textContent=state.calls.length;
+  const int=state.calls.filter(c=>c.outcome==='interested').length;
+  const conv=state.calls.length?Math.round(int/state.calls.length*100):0;
+  document.getElementById('an-convRate').textContent=conv+'%';
+  // avg per day
+  const days={};state.calls.forEach(c=>{days[c.date]=(days[c.date]||0)+1;});
+  const dayCount=Object.keys(days).length||1;
+  document.getElementById('an-avgPerDay').textContent=Math.round(state.calls.length/dayCount);
+  renderOutcomeChart();renderNicheAnalytics();renderTimeline();
+}
+
+function renderOutcomeChart(){
+  const el=document.getElementById('outcomeChart');
+  const outcomes={};state.calls.forEach(c=>outcomes[c.outcome]=(outcomes[c.outcome]||0)+1);
+  const entries=Object.entries(outcomes).sort((a,b)=>b[1]-a[1]);
+  if(!entries.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">No calls logged yet.</div>';return;}
+  const max=entries[0][1];
+  const colors={'interested':'var(--green)','not-interested':'var(--danger)','no-answer':'var(--warn)',voicemail:'var(--warn)',callback:'var(--blue)',skipped:'var(--muted)','wrong-number':'var(--muted)'};
+  el.innerHTML=entries.map(([k,v])=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 0">
+      <div style="font-size:11px;color:var(--text);width:130px;text-transform:capitalize">${k.replace(/-/g,' ')}</div>
+      <div style="flex:1;height:4px;background:rgba(200,212,202,.08);border-radius:2px"><div style="height:100%;border-radius:2px;background:${colors[k]||'var(--muted)'};width:${v/max*100}%;transition:width .6s"></div></div>
+      <div style="font-size:13px;font-weight:600;color:${colors[k]||'var(--muted)'};width:28px;text-align:right">${v}</div>
+    </div>`).join('');
+}
+
+function renderNicheAnalytics(){
+  const el=document.getElementById('nicheAnalytics');
+  const niches={};state.leads.forEach(l=>niches[l.category||'Unknown']=(niches[l.category||'Unknown']||0)+1);
+  const entries=Object.entries(niches).sort((a,b)=>b[1]-a[1]);
+  if(!entries.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Load leads to see niche data.</div>';return;}
+  const max=entries[0][1];
+  el.innerHTML=entries.map(([n,v])=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 0">
+      <div style="font-size:11px;color:var(--text);width:130px">${n}</div>
+      <div style="flex:1;height:4px;background:rgba(200,212,202,.08);border-radius:2px"><div style="height:100%;border-radius:2px;background:var(--green);width:${v/max*100}%;transition:width .6s"></div></div>
+      <div style="font-size:13px;font-weight:600;color:var(--green);width:28px;text-align:right">${v}</div>
+    </div>`).join('');
+}
+
+function renderTimeline(){
+  const el=document.getElementById('timelineChart');
+  const days={};
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days[d.toLocaleDateString()]=0;}
+  state.calls.forEach(c=>{if(days[c.date]!==undefined)days[c.date]++;});
+  const entries=Object.entries(days);
+  if(!entries.some(([,v])=>v>0)){el.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;width:100%;padding-top:20px">No activity yet.</div>';return;}
+  const max=Math.max(...entries.map(([,v])=>v))||1;
+  el.innerHTML=entries.map(([d,v])=>`
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+      <div style="flex:1;width:100%;display:flex;align-items:flex-end;padding:0 2px">
+        <div style="width:100%;border-radius:3px 3px 0 0;background:${v>0?'var(--green)':'rgba(62,207,106,.12)'};height:${v?Math.max(v/max*100,8):4}%;min-height:4px;transition:height .4s;cursor:default" title="${v} calls on ${d}"></div>
+      </div>
+      <div style="font-size:9px;color:var(--muted);white-space:nowrap">${new Date(d).toLocaleDateString('en',{weekday:'short'})}</div>
+      <div style="font-size:9px;font-weight:600;color:${v?'var(--green)':'var(--muted)'}">${v}</div>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════ */
+refreshDashboard();
+refreshCallStats();
+renderScripts();
+
+// Business status in topbar
+function updateBizStatus(){
+  const openZones=TZ_CITIES.filter(c=>isBusinessHours(c.tz)).map(c=>c.name);
+  const el=document.getElementById('currentBizStatus');
+  el.textContent=openZones.length?`${openZones.join(', ')} — Business Hours`:'All zones closed';
+  el.className='clock-biz '+(openZones.length?'biz-open':'biz-closed');
+}
+updateBizStatus();setInterval(updateBizStatus,60000);
+</script>
+</body>
+</html>
